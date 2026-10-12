@@ -1,0 +1,59 @@
+// SlotSync database design.
+// Paste this into https://dbdiagram.io to get the ER diagram and a shareable link.
+
+Enum Role {
+  ADMIN
+  MEMBER
+}
+
+Enum ReservationStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+Table User {
+  id uuid [pk]
+  name text [not null]
+  email text [not null, unique]
+  passwordHash text [not null]
+  role Role [not null, default: 'MEMBER']
+  createdAt timestamptz [not null]
+}
+
+Table ResourceType {
+  id uuid [pk]
+  name text [not null, unique, note: 'Meeting Room, Equipment, Vehicle...']
+}
+
+Table Resource {
+  id uuid [pk]
+  name text [not null]
+  typeId uuid [not null, ref: > ResourceType.id]
+  location text [not null]
+  capacity int
+  description text
+  isActive boolean [not null, default: true]
+  createdAt timestamptz [not null]
+}
+
+Table Reservation {
+  id uuid [pk]
+  resourceId uuid [not null, ref: > Resource.id]
+  userId uuid [not null, ref: > User.id]
+  startTime timestamptz [not null]
+  endTime timestamptz [not null]
+  purpose text [not null]
+  status ReservationStatus [not null, default: 'CONFIRMED']
+  createdAt timestamptz [not null]
+  cancelledAt timestamptz
+
+  indexes {
+    (resourceId, startTime)
+    userId
+  }
+
+  Note: '''
+  CHECK endTime > startTime.
+  EXCLUDE constraint: no two CONFIRMED reservations for the same resource may overlap in time.
+  '''
+}
