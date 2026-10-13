@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidDateKey, zonedToInstant } from "@/lib/time";
 
 // Sign in form. Email is trimmed and lowercased so "Admin@SlotSync.dev " still matches.
 export const loginSchema = z.object({
@@ -11,6 +12,11 @@ export type LoginInput = z.infer<typeof loginSchema>;
 // ?type= on the resources page. Anything that isn't a valid id is ignored (shows all types).
 export const resourceFilterSchema = z.object({
   type: z.string().uuid().optional().catch(undefined),
+});
+
+// ?date=YYYY-MM-DD on the resource page. Missing or invalid falls back to today.
+export const dayQuerySchema = z.object({
+  date: z.string().refine(isValidDateKey).optional().catch(undefined),
 });
 
 // Optional text field: empty input is stored as null.
@@ -45,3 +51,24 @@ export const resourceSchema = z.object({
 });
 
 export type ResourceInput = z.infer<typeof resourceSchema>;
+
+// "2026-10-13T09:30" from a datetime-local input, read on the organisation's clock.
+const localDateTime = (label: string) =>
+  z
+    .string({ required_error: `Enter the ${label}` })
+    .min(1, `Enter the ${label}`)
+    .refine((v) => /^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d$/.test(v) && isValidDateKey(v.slice(0, 10)), `Enter a valid ${label}`)
+    .transform((v) => zonedToInstant(v.slice(0, 10), v.slice(11, 16)));
+
+// Booking form. The other rules (not in the past, resource active, no overlap) need the
+// database or the current time, so they live in createReservation().
+export const reservationSchema = z
+  .object({
+    resourceId: z.string().uuid("Choose a resource"),
+    startTime: localDateTime("start time"),
+    endTime: localDateTime("end time"),
+    purpose: z.string().trim().min(1, "Enter a purpose").max(200, "Purpose must be 200 characters or fewer"),
+  })
+  .refine((v) => v.endTime > v.startTime, { path: ["endTime"], message: "End time must be after the start time" });
+
+export type ReservationInput = z.infer<typeof reservationSchema>;
