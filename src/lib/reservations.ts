@@ -95,6 +95,30 @@ export async function listUserReservations(userId: string, now = new Date()) {
   return { upcoming, past };
 }
 
+export const ADMIN_LIST_LIMIT = 100;
+
+// Admin view of every booking, optionally for one resource and/or one day (bookings overlapping that day).
+export async function listAllReservations(filter: { resourceId?: string; day?: { start: Date; end: Date } } = {}) {
+  const where = {
+    resourceId: filter.resourceId,
+    ...(filter.day && { startTime: { lt: filter.day.end }, endTime: { gt: filter.day.start } }),
+  };
+  const [reservations, total] = await Promise.all([
+    db.reservation.findMany({
+      where,
+      include: {
+        resource: { select: { id: true, name: true } },
+        user: { select: { name: true, email: true } },
+      },
+      // One day: in time order. Otherwise: newest first.
+      orderBy: { startTime: filter.day ? "asc" : "desc" },
+      take: ADMIN_LIST_LIMIT,
+    }),
+    db.reservation.count({ where }),
+  ]);
+  return { reservations, total };
+}
+
 type Actor = { id: string; role: "ADMIN" | "MEMBER" };
 
 // Rules 5 and 6: members cancel only their own bookings, admins any. Cancelling never deletes;

@@ -19,6 +19,12 @@ export const dayQuerySchema = z.object({
   date: z.string().refine(isValidDateKey).optional().catch(undefined),
 });
 
+// ?resource=&date= on the admin bookings page. Invalid values are ignored (no filter).
+export const adminBookingFilterSchema = z.object({
+  resource: z.string().uuid().optional().catch(undefined),
+  date: z.string().refine(isValidDateKey).optional().catch(undefined),
+});
+
 // Optional text field: empty input is stored as null.
 const optionalText = (max: number, label: string) =>
   z
