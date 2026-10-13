@@ -76,6 +76,51 @@ export async function createReservation(
   return { ok: true, message: `Booked ${resource.name} for ${describeRange(startTime, endTime)}.` };
 }
 
+// A user's bookings, split into upcoming (confirmed and not yet ended) and past (ended or cancelled).
+export async function listUserReservations(userId: string, now = new Date()) {
+  const include = { resource: { select: { id: true, name: true, location: true } } };
+  const [upcoming, past] = await Promise.all([
+    db.reservation.findMany({
+      where: { userId, status: "CONFIRMED", endTime: { gt: now } },
+      include,
+      orderBy: { startTime: "asc" },
+    }),
+    db.reservation.findMany({
+      where: { userId, OR: [{ status: "CANCELLED" }, { endTime: { lte: now } }] },
+      include,
+      orderBy: { startTime: "desc" },
+      take: 50,
+    }),
+  ]);
+  return { upcoming, past };
+}
+
+type Actor = { id: string; role: "ADMIN" | "MEMBER" };
+
+// Rules 5 and 6: members cancel only their own bookings, admins any. Cancelling never deletes;
+// it marks the booking CANCELLED, which frees the slot and keeps the history.
+export async function cancelReservation(id: string, actor: Actor, now = new Date()): Promise<ReservationResult> {
+  const reservation = await db.reservation.findUnique({ where: { id }, include: { resource: true } });
+  if (!reservation) return { ok: false, error: "This booking no longer exists." };
+  if (actor.role !== "ADMIN" && reservation.userId !== actor.id) {
+    return { ok: false, error: "You can only cancel your own bookings." };
+  }
+  if (reservation.status === "CANCELLED") return { ok: false, error: "This booking is already cancelled." };
+  if (reservation.startTime <= now) return { ok: false, error: "This booking has already started and can't be cancelled." };
+
+  // Only update if it's still confirmed, so two cancels at once can't both "succeed".
+  const { count } = await db.reservation.updateMany({
+    where: { id, status: "CONFIRMED" },
+    data: { status: "CANCELLED", cancelledAt: now },
+  });
+  if (count === 0) return { ok: false, error: "This booking is already cancelled." };
+
+  return {
+    ok: true,
+    message: `Cancelled ${reservation.resource.name} for ${describeRange(reservation.startTime, reservation.endTime)}.`,
+  };
+}
+
 type Timed = { startTime: Date; endTime: Date };
 
 export type ScheduleBlock<R extends Timed> =
