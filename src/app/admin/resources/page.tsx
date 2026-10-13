@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { listResources, listResourceTypes } from "@/lib/resources";
 import { ResourceForm } from "@/components/resource-form";
+import { createResourceAction, setResourceActiveAction } from "./actions";
 
 export const metadata = { title: "Manage resources · SlotSync" };
 
@@ -14,7 +16,12 @@ export default async function AdminResourcesPage() {
 
       <section className="mt-6 rounded-lg border border-gray-200 p-4">
         <h2 className="mb-4 font-semibold">Add a resource</h2>
-        <ResourceForm types={types} />
+        <ResourceForm
+          types={types}
+          action={createResourceAction}
+          submitLabel="Create resource"
+          pendingLabel="Creating..."
+        />
       </section>
 
       <section className="mt-8">
@@ -28,6 +35,9 @@ export default async function AdminResourcesPage() {
                 <th className="px-4 py-2 font-medium">Location</th>
                 <th className="px-4 py-2 font-medium">Capacity</th>
                 <th className="px-4 py-2 font-medium">Status</th>
+                <th className="px-4 py-2 font-medium">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -45,6 +55,28 @@ export default async function AdminResourcesPage() {
                     >
                       {r.isActive ? "Active" : "Inactive"}
                     </span>
+                  </td>
+                  <td className="px-4 py-2">
+                    <div className="flex justify-end gap-2">
+                      <Link
+                        href={`/admin/resources/${r.id}/edit`}
+                        className="rounded-md border border-gray-300 px-3 py-1 hover:border-blue-600"
+                      >
+                        Edit
+                      </Link>
+                      <form action={setResourceActiveAction.bind(null, r.id, !r.isActive)}>
+                        <button
+                          type="submit"
+                          className={`w-24 rounded-md border px-3 py-1 ${
+                            r.isActive
+                              ? "border-red-300 text-red-700 hover:bg-red-50"
+                              : "border-green-300 text-green-700 hover:bg-green-50"
+                          }`}
+                        >
+                          {r.isActive ? "Deactivate" : "Activate"}
+                        </button>
+                      </form>
+                    </div>
                   </td>
                 </tr>
               ))}

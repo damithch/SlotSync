@@ -16,10 +16,34 @@ export function listResources(filter: { typeId?: string } = {}) {
   });
 }
 
+export function getResource(id: string) {
+  return db.resource.findUnique({ where: { id }, include: { type: true } });
+}
+
+async function typeExists(typeId: string) {
+  return (await db.resourceType.count({ where: { id: typeId } })) > 0;
+}
+
 export async function createResource(input: ResourceInput): Promise<ResourceResult> {
-  const type = await db.resourceType.findUnique({ where: { id: input.typeId } });
-  if (!type) return { ok: false, error: "That resource type no longer exists." };
+  if (!(await typeExists(input.typeId))) return { ok: false, error: "That resource type no longer exists." };
 
   await db.resource.create({ data: input });
+  return { ok: true };
+}
+
+export async function updateResource(id: string, input: ResourceInput): Promise<ResourceResult> {
+  if (!(await getResource(id))) return { ok: false, error: "This resource no longer exists." };
+  if (!(await typeExists(input.typeId))) return { ok: false, error: "That resource type no longer exists." };
+
+  await db.resource.update({ where: { id }, data: input });
+  return { ok: true };
+}
+
+// Resources are deactivated, never deleted, so their past bookings stay intact.
+// Existing bookings are kept; an inactive resource just can't take new ones.
+export async function setResourceActive(id: string, isActive: boolean): Promise<ResourceResult> {
+  if (!(await getResource(id))) return { ok: false, error: "This resource no longer exists." };
+
+  await db.resource.update({ where: { id }, data: { isActive } });
   return { ok: true };
 }

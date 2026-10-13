@@ -1,17 +1,31 @@
 "use client";
 
 import { useActionState } from "react";
-import { createResourceAction, type ResourceFormState } from "@/app/admin/resources/actions";
+import type { ResourceFormState } from "@/app/admin/resources/actions";
 
 type Field = keyof NonNullable<ResourceFormState["fieldErrors"]>;
 
 const inputClass =
   "mt-1 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 focus:border-blue-600 focus:outline-none aria-invalid:border-red-500";
 
-export function ResourceForm({ types }: { types: { id: string; name: string }[] }) {
-  const [state, formAction, pending] = useActionState(createResourceAction, {});
+// Used for both creating (empty) and editing (pre-filled with `defaults`).
+export function ResourceForm({
+  types,
+  action,
+  defaults = {},
+  submitLabel,
+  pendingLabel,
+}: {
+  types: { id: string; name: string }[];
+  action: (prev: ResourceFormState, formData: FormData) => Promise<ResourceFormState>;
+  defaults?: Partial<Record<Field, string>>;
+  submitLabel: string;
+  pendingLabel: string;
+}) {
+  const [state, formAction, pending] = useActionState(action, {});
 
-  const value = (field: Field) => state.values?.[field] ?? "";
+  // After an error, show what was typed; otherwise the saved values.
+  const value = (field: Field) => state.values?.[field] ?? defaults[field] ?? "";
   const errorFor = (field: Field) => {
     const message = state.fieldErrors?.[field]?.[0];
     return message ? (
@@ -103,7 +117,7 @@ export function ResourceForm({ types }: { types: { id: string; name: string }[] 
           disabled={pending}
           className="rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-60"
         >
-          {pending ? "Creating..." : "Create resource"}
+          {pending ? pendingLabel : submitLabel}
         </button>
         {state.success && (
           <p role="status" className="text-sm text-green-700">
