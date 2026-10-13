@@ -17,7 +17,7 @@ export default async function EditResourcePage({ params }: { params: Promise<{ i
   if (!resource) notFound();
 
   return (
-    <main className="mx-auto max-w-3xl p-6">
+    <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
       <Link href="/admin/resources" className="text-sm text-blue-600 hover:underline">
         ← All resources
       </Link>

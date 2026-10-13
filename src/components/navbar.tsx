@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
+import { NavLinks } from "@/components/nav-links";
 
 const memberLinks = [
   { href: "/resources", label: "Resources" },
@@ -21,20 +22,12 @@ export async function Navbar() {
 
   return (
     <header className="border-b border-gray-200">
-      <nav className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-6 py-3">
+      <nav className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 sm:px-6">
         <Link href="/" className="text-lg font-bold">
           SlotSync
         </Link>
 
-        <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
-          {links.map((link) => (
-            <li key={link.href}>
-              <Link href={link.href} className="text-gray-600 hover:text-blue-600">
-                {link.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <NavLinks links={links} />
 
         <div className="ml-auto flex items-center gap-3 text-sm">
           <span>

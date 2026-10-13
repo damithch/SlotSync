@@ -11,7 +11,7 @@ export default async function AdminResourcesPage() {
   const [types, resources] = await Promise.all([listResourceTypes(), listResources()]);
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
+    <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
       <h1 className="text-2xl font-bold">Manage resources</h1>
 
       <section className="mt-6 rounded-lg border border-gray-200 p-4">

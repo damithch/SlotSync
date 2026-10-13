@@ -15,7 +15,7 @@ export default async function ResourcesPage({
   const filters = [{ id: undefined, name: "All" }, ...types];
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
+    <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
       <h1 className="text-2xl font-bold">Resources</h1>
       <p className="mt-1 text-gray-500">Pick a resource to see when it&apos;s free and book it.</p>
 

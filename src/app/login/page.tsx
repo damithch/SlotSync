@@ -15,7 +15,7 @@ export default async function LoginPage({
   const { callbackUrl } = await searchParams;
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center p-6">
+    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4 py-6 sm:px-6">
       <h1 className="text-2xl font-bold">Sign in to SlotSync</h1>
       <p className="mt-1 mb-6 text-sm text-gray-500">Book rooms, equipment and vehicles.</p>
       <LoginForm callbackUrl={callbackUrl} />

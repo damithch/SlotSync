@@ -44,7 +44,7 @@ export default async function MyBookingsPage() {
   const { upcoming, past } = await listUserReservations(session.user.id, now);
 
   return (
-    <main className="mx-auto max-w-3xl p-6">
+    <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
       <h1 className="text-2xl font-bold">My bookings</h1>
 
       <section className="mt-6">

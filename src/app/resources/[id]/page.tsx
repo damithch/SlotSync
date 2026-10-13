@@ -18,6 +18,12 @@ import { BookingForm } from "@/components/booking-form";
 
 const HOUR = 60 * 60 * 1000;
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const resource = z.string().uuid().safeParse(id).success ? await getResource(id) : null;
+  return { title: `${resource?.name ?? "Resource"} · SlotSync` };
+}
+
 // Suggested start: the next full hour if it's today, otherwise 09:00 on the chosen day.
 // Rounded on the organisation's clock, since some zones (like Colombo, UTC+5:30) aren't whole hours from UTC.
 function suggestedStart(date: string, today: string, now: Date) {
@@ -54,7 +60,7 @@ export default async function ResourcePage({
   const dayLink = (d: string) => `/resources/${resource.id}?date=${d}`;
 
   return (
-    <main className="mx-auto max-w-3xl p-6">
+    <main className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
       <Link href="/resources" className="text-sm text-blue-600 hover:underline">
         ← All resources
       </Link>

@@ -23,7 +23,7 @@ export default async function AdminBookingsPage({
   const filtered = Boolean(filter.resource || filter.date);
 
   return (
-    <main className="mx-auto max-w-6xl p-6">
+    <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
       <h1 className="text-2xl font-bold">All bookings</h1>
 
       {/* A plain GET form: filters live in the URL, so they can be bookmarked and work without JavaScript. */}
