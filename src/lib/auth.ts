@@ -25,3 +25,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
 });
+
+// For admin server actions and pages. Middleware only guards page loads, and a server action
+// can be called directly, so each admin action checks the role again here.
+export async function requireAdmin() {
+  const session = await auth();
+  if (session?.user.role !== "ADMIN") {
+    throw new Error("Only admins can do this.");
+  }
+  return session;
+}
